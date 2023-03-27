@@ -1,11 +1,23 @@
 import socket
 import json
-hostname = socket.gethostname()
-ip_address = socket.gethostbyname(hostname)
+import requests
+try:
+    response = requests.get("http://ifconfig.me")
+    ip_address = response.content.decode('utf-8')
+except requests.exceptions.ConnectionError:
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
 HOST, PORT = ip_address, 8888
 listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 2)
-listen_socket.bind((HOST, PORT))
+try:
+    listen_socket.bind((HOST, PORT))
+except OSError:
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
+    HOST, PORT = ip_address, 8888
+    listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 2)
 listen_socket.listen(1)
 def link(uri, label=None):
     if label is None: 
@@ -21,13 +33,10 @@ paths = paths.read()
 paths = json.loads(paths)
 while True:
     client_connection, client_address = listen_socket.accept()
+    client_ip = client_address[0]
     request_data = client_connection.recv(1024)
     split_data = request_data.decode().split()
     req_path = split_data[1:2][0]
-    if 'Referer:' in split_data:
-        ip = split_data[34]
-    else:
-        ip = split_data[32]
     if req_path in paths:
         filename = "src/" + paths[req_path]
         html = open(filename, "r")
@@ -37,13 +46,13 @@ HTTP/1.1 200 OK
 
 {html}
 """
-        print("[INFO] \033[92mGET " + req_path +" 200 OK\033[00m   IP: " + ip)
+        print("[INFO] \033[92mGET " + req_path +" 200 OK\033[00m   IP: " + client_ip)
     else:
         http_response = """\
 HTTP/1.1 404 Not Found
 
 Invalid Path
 """
-        print("[INFO] \033[31mGET " + req_path +" 404 Not Found\033[00m  IP: " + ip)
+        print("[INFO] \033[31mGET " + req_path +" 404 Not Found\033[00m  IP: " + client_ip)
     client_connection.sendall(http_response.encode("utf-8"))
     client_connection.close()
