@@ -1,18 +1,19 @@
 import socket
 import json
-HOST, PORT = '0.0.0.0', 8888
+hostname = socket.gethostname()
+ip_address = socket.gethostbyname(hostname)
+HOST, PORT = ip_address, 8888
 listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 2)
 listen_socket.bind((HOST, PORT))
 listen_socket.listen(1)
-listening_ip = listen_socket.getsockname()[0]
 def link(uri, label=None):
     if label is None: 
         label = uri
     parameters = ''
     escape_mask = '\033]8;{};{}\033\\{}\033]8;;\033\\'
     return escape_mask.format(parameters, uri, label)
-linked = link(f"http://{listening_ip}:{PORT}")
+linked = link(f"http://{ip_address}:{PORT}")
 print(f"Serving HTTP on \033[93m{linked}\033[00m\n")
 print("\033[96mLogs:\033[00m")
 paths = open("server.conf", "r")
