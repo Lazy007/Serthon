@@ -67,8 +67,8 @@ if "paths" in config:
 else:
   path_state = False
 while True:
-  client_connection, client_address = listen_socket.accept()
-  client_ip = client_address[0]
+  client_connection, client_ip = listen_socket.accept()
+  client_ip = client_ip[0]
   request_data = client_connection.recv(1024)
   split_data = request_data.decode().split()
   req_path = split_data[1:2][0]
