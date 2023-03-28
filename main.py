@@ -52,11 +52,11 @@ listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 2)
 try:
   listen_socket.bind((HOST, PORT))
 except TypeError:
-  print(f"[{red}ERROR{norm}] INVALID PORT OR IP. PLEASE CHANGE CONIFG")
+  print(f"[{red}ERROR{norm}] INVALID PORT OR IP. PLEASE CHANGE CONFIG")
   exit()
 except OSError:
   if server['address'] == "local":
-    print(f"[{red}ERROR{norm}] INVALID PORT OR IP. PLEASE CHANGE CONIFG")
+    print(f"[{red}ERROR{norm}] INVALID PORT OR IP. PLEASE CHANGE CONFIG")
     exit()
   hostname = socket.gethostname()
   ip_address = socket.gethostbyname(hostname)
