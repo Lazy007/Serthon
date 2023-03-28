@@ -1,0 +1,14 @@
+{
+  "server": {
+    "address": "public",
+    "port": 8888
+  },
+  "paths": {
+    "/" : "index.html", 
+    "/hello" : "hello.html"
+  },
+  "redirects": {
+    "/test": "/",
+    "/idk": "/hello"
+  }
+}
