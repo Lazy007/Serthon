@@ -1,4 +1,5 @@
 import socket, json, requests, os, sys
+black, red, green, orange, blue, purple, cyan, lightgrey, darkgrey, lightred, lightgreen, yellow, lightblue, pink, lightcyan, norm = '\033[30m', '\033[31m', '\033[32m', '\033[33m', '\033[34m', '\033[35m', '\033[36m', '\033[37m', '\033[90m', '\033[91m', '\033[92m', '\033[93m', '\033[94m', '\033[95m', '\033[96m', '\033[0m'
 args = sys.argv[1:]
 if not args:
   filename = "config.json"
@@ -15,18 +16,22 @@ elif args[0] in ["--help", "-h"]:
 else:
   print("USAGE: python3 main.py -f 'filename'")
 if not os.path.isfile(filename):
-  print(f"[ERROR] NO CONFIG FILE FOUND WITH NAME {filename}. CREATE ONE AS 'config.json' OR TO USE DIFFERENT FILENAME RUN SERTHON AS 'python3 main.py -f filename' ")
+  print(f"[{red}ERROR{norm}] NO CONFIG FILE FOUND WITH NAME {filename}. CREATE ONE AS 'config.json' OR TO USE DIFFERENT FILENAME RUN SERTHON AS 'python3 main.py -f filename' ")
   exit()
-config = open("filename", "r")
+config = open(filename, "r")
 config = config.read()
-config = json.loads(config)
+try:
+  config = json.loads(config)
+except ValueError:
+  print(f"[{red}ERROR{norm}] SYNTAX ERROR IN {filename}")
+  exit()
 if not "server" in config:
-  print("[ERROR] CONFIG DOES NOT CONTAINS SERVER INFO. PLEASE ADD SEVER IN CONFIG FILE")
+  print(f"[{red}ERROR{norm}] CONFIG DOES NOT CONTAINS SERVER INFO. PLEASE ADD SEVER IN CONFIG FILE")
   exit()
 else:
   server = config['server']
 if not "address" in server or not "port" in server:
-  print("[ERROR] CONFIG DOES NOT CONTAINS ADDRESS OR PORT INFO. PLEASE ADD SEVER IN CONFIG FILE")
+  print(f"[{red}ERROR{norm}] CONFIG DOES NOT CONTAINS ADDRESS OR PORT INFO. PLEASE ADD SEVER IN CONFIG FILE")
   exit()
 if server['address'] == "public":
   try:
@@ -35,7 +40,7 @@ if server['address'] == "public":
   except requests.exceptions.ConnectionError:
     hostname = socket.gethostname()
     ip_address = socket.gethostbyname(hostname)
-    print("[ERROR] NO INTERNET CONNECTION")
+    print(f"[{red}ERROR{norm}] NO INTERNET CONNECTION")
 elif server['address'] == "local":
   hostname = socket.gethostname()
   ip_address = socket.gethostbyname(hostname)
@@ -47,11 +52,11 @@ listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 2)
 try:
   listen_socket.bind((HOST, PORT))
 except TypeError:
-  print("[ERROR] INVALID PORT OR IP. PLEASE CHANGE CONIFG")
+  print(f"[{red}ERROR{norm}] INVALID PORT OR IP. PLEASE CHANGE CONIFG")
   exit()
 except OSError:
   if server['address'] == "local":
-    print("[ERROR] INVALID PORT OR IP. PLEASE CHANGE CONIFG")
+    print(f"[{red}ERROR{norm}] INVALID PORT OR IP. PLEASE CHANGE CONIFG")
     exit()
   hostname = socket.gethostname()
   ip_address = socket.gethostbyname(hostname)
@@ -59,22 +64,17 @@ except OSError:
   listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 2)
 except OSError:
-  print("[ERROR] PORT OR IP ALREADY IN USE. PLEASE CHANGE CONFIG")
+  print(f"[{red}ERROR{norm}] PORT OR IP ALREADY IN USE. PLEASE CHANGE CONFIG")
   exit()
 listen_socket.listen(1)
-
-
 def link(uri, label=None):
   if label is None:
     label = uri
   parameters = ''
   escape_mask = '\033]8;{};{}\033\\{}\033]8;;\033\\'
   return escape_mask.format(parameters, uri, label)
-
-
 linked = link(f"http://{ip_address}:{PORT}")
-print(f"Serving HTTP on \033[93m{linked}\033[00m\n")
-print("\033[96mLogs:\033[00m")
+print(f"Serving HTTP on {yellow}{linked}{norm}\n")
 if "redirects" in config:
   redirects = config['redirects']
   rdr_state = True
@@ -100,8 +100,7 @@ HTTP/1.1 200 OK
 
 {html}
 """
-    print("[INFO] \033[92mGET " + req_path + " 200 OK\033[00m   IP: " +
-          client_ip)
+    print(f"[{blue}INFO{norm}] {lightgreen}GET {req_path} 200 OK{norm}   IP: {client_ip}")
   elif rdr_state == True and req_path in redirects:
     route = config['redirects'][req_path]
     http_response = f"""\
@@ -109,15 +108,13 @@ HTTP/1.1 301 Moved Permanently
 Location: {route}
 
 """
-    print("[INFO] \033[92mGET " + req_path + " 301 Redirected\033[00m   IP: " +
-          client_ip)
+    print(f"[{blue}INFO{norm}] {lightgreen}GET {req_path} 301 Redirected{norm}   IP: {client_ip}")
   else:
     http_response = """\
 HTTP/1.1 404 Not Found
 
 404 Not Found
 """
-    print("[INFO] \033[31mGET " + req_path + " 404 Not Found\033[00m  IP: " +
-          client_ip)
+    print(f"[{blue}INFO{norm}] {red}GET {req_path} 404 Not Found{norm}  IP: {client_ip}")
   client_connection.sendall(http_response.encode("utf-8"))
   client_connection.close()
